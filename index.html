@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Member JKT48</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+        }
+
+        .birthday-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .birthday-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .person-name {
+            color: #3498db;
+            margin: 0 0 1rem 0;
+            font-size: 1.8rem;
+        }
+
+        .countdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 10px;
+        }
+
+        .time-unit {
+            text-align: center;
+            padding: 0.8rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .time-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .time-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-top: 0.3rem;
+        }
+
+        @media (max-width: 600px) {
+            .countdown {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">Ulang Tahun Terdekat</h1>
+        <div id="birthdayContainer"></div>
+    </div>
+
+    <!-- Data terpisah -->
+    <script src="data.js"></script>
+    
+    <!-- Logika utama -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('birthdayContainer');
+
+            function getNextBirthday(birthdate) {
+                const today = new Date();
+                const bDate = new Date(birthdate);
+                let nextBDay = new Date(today.getFullYear(), bDate.getMonth(), bDate.getDate());
+                
+                if (nextBDay < today) {
+                    nextBDay.setFullYear(nextBDay.getFullYear() + 1);
+                }
+                return nextBDay;
+            }
+
+            function calculateTimeDiff(nextDate) {
+                const now = new Date();
+                let diff = nextDate - now;
+
+                if (diff < 0) return { expired: true };
+
+                const seconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+                
+                return {
+                    years: Math.floor(days / 365),
+                    months: Math.floor((days % 365) / 30),
+                    weeks: Math.floor(((days % 365) % 30) / 7),
+                    days: ((days % 365) % 30) % 7,
+                    hours: hours % 24,
+                    minutes: minutes % 60,
+                    seconds: seconds % 60
+                };
+            }
+
+            function updateDisplay() {
+                const now = new Date();
+                
+                const peopleWithTime = birthdays.map(person => {
+                    const nextBDay = getNextBirthday(person.birthdate);
+                    const timeDiff = calculateTimeDiff(nextBDay);
+                    return {
+                        ...person,
+                        nextBDay,
+                        timeDiff,
+                        sortKey: nextBDay - now
+                    };
+                });
+
+                peopleWithTime.sort((a, b) => a.sortKey - b.sortKey);
+
+                container.innerHTML = peopleWithTime.map(person => `
+                    <div class="birthday-card">
+                        <h2 class="person-name">${person.name}</h2>
+                        <div class="countdown">
+                            ${Object.entries(person.timeDiff).map(([unit, value]) => `
+                                <div class="time-unit">
+                                    <div class="time-number">${value}</div>
+                                    <div class="time-label">${unit}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Update awal dan setiap detik
+            updateDisplay();
+            setInterval(updateDisplay, 1000);
+        });
+    </script>
+</body>
+</html>
