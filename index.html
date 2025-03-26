@@ -6,8 +6,8 @@
     <title>Birthday Member JKT48</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%);
             min-height: 100vh;
             padding: 2rem;
             margin: 0;
@@ -20,67 +20,109 @@
 
         .header {
             text-align: center;
-            margin-bottom: 2rem;
-            color: #2c3e50;
+            margin-bottom: 3rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 2.5em;
         }
 
         .birthday-card {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-            display: flex;
-            flex-direction: column;
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: grid;
+            gap: 1.5rem;
         }
 
         .birthday-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .person-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .person-name {
-            color: #3498db;
-            margin: 0 0 1rem 0;
-            font-size: 1.8rem;
+            color: #4A90E2;
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .age-info {
+            text-align: right;
+            color: #666;
+        }
+
+        .current-age {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .next-age {
+            color: #4A90E2;
+            font-weight: 600;
         }
 
         .countdown {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 1rem;
-            padding: 1rem;
-            background: rgba(52, 152, 219, 0.1);
-            border-radius: 10px;
+            padding: 1.5rem;
+            background: rgba(74, 144, 226, 0.1);
+            border-radius: 15px;
         }
 
         .time-unit {
             text-align: center;
-            padding: 0.8rem;
+            padding: 1rem;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .time-unit:hover {
+            transform: scale(1.05);
         }
 
         .time-number {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: bold;
-            color: #2c3e50;
+            color: #4A90E2;
         }
 
         .time-label {
             font-size: 0.9rem;
-            color: #7f8c8d;
+            color: #666;
             text-transform: uppercase;
-            margin-top: 0.3rem;
+            margin-top: 0.5rem;
+            letter-spacing: 1px;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .countdown {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .person-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .age-info {
+                text-align: center;
+            }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -88,13 +130,22 @@
         <div id="birthdayContainer"></div>
     </div>
 
-    <!-- Data terpisah -->
     <script src="data.js"></script>
-    
-    <!-- Logika utama -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('birthdayContainer');
+
+            function calculateAge(birthdate, referenceDate) {
+                const birth = new Date(birthdate);
+                const reference = new Date(referenceDate);
+                let age = reference.getFullYear() - birth.getFullYear();
+                const monthDiff = reference.getMonth() - birth.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && reference.getDate() < birth.getDate())) {
+                    age--;
+                }
+                return age;
+            }
 
             function getNextBirthday(birthdate) {
                 const today = new Date();
@@ -119,7 +170,6 @@
                 const days = Math.floor(hours / 24);
                 
                 return {
-                    years: Math.floor(days / 365),
                     months: Math.floor((days % 365) / 30),
                     weeks: Math.floor(((days % 365) % 30) / 7),
                     days: ((days % 365) % 30) % 7,
@@ -134,11 +184,15 @@
                 
                 const peopleWithTime = birthdays.map(person => {
                     const nextBDay = getNextBirthday(person.birthdate);
+                    const currentAge = calculateAge(person.birthdate, now);
+                    const nextAge = calculateAge(person.birthdate, nextBDay);
                     const timeDiff = calculateTimeDiff(nextBDay);
                     return {
                         ...person,
                         nextBDay,
                         timeDiff,
+                        currentAge,
+                        nextAge,
                         sortKey: nextBDay - now
                     };
                 });
@@ -147,7 +201,13 @@
 
                 container.innerHTML = peopleWithTime.map(person => `
                     <div class="birthday-card">
-                        <h2 class="person-name">${person.name}</h2>
+                        <div class="person-info">
+                            <h2 class="person-name">${person.name}</h2>
+                            <div class="age-info">
+                                <div class="current-age">Usia saat ini: ${person.currentAge} tahun</div>
+                                <div class="next-age">Akan berusia ${person.nextAge} tahun</div>
+                            </div>
+                        </div>
                         <div class="countdown">
                             ${Object.entries(person.timeDiff).map(([unit, value]) => `
                                 <div class="time-unit">
@@ -160,7 +220,6 @@
                 `).join('');
             }
 
-            // Update awal dan setiap detik
             updateDisplay();
             setInterval(updateDisplay, 1000);
         });
